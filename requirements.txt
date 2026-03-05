@@ -1,0 +1,19 @@
+# Core ML
+torch>=2.1.0
+transformers>=4.51.0
+datasets>=2.14.0
+accelerate>=0.27.0
+
+# Parameter-efficient fine-tuning
+peft>=0.7.0
+trl>=0.8.0
+
+# Quantization (QLoRA)
+bitsandbytes>=0.41.0
+
+# Hugging Face Hub (model upload/download)
+huggingface_hub>=0.20.0
+
+# Utilities
+sentencepiece>=0.1.99
+python-dotenv>=1.0.0
