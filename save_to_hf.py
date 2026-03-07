@@ -39,8 +39,8 @@ def main():
     # ----------------------------------------------------------------
     # Repo names
     # ----------------------------------------------------------------
-    merged_repo  = f"{username}/qwen3-4b-function-calling"
-    adapter_repo = f"{username}/qwen3-4b-function-calling-lora"
+    merged_repo  = f"{username}/qwen3-4b-xlam-function-calling-60k"
+    adapter_repo = f"{username}/qwen3-4b-xlam-function-calling-60k-lora"
 
     train_cfg = TrainingConfig()
     model_cfg = ModelConfig()

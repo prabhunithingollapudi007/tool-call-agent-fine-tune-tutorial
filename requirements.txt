@@ -17,3 +17,6 @@ huggingface_hub>=0.20.0
 # Utilities
 sentencepiece>=0.1.99
 python-dotenv>=1.0.0
+
+# Weights & Biases (optional, for experiment tracking)
+wandb>=0.15.0

@@ -12,6 +12,7 @@ A hobby project that fine-tunes [Qwen3-4B-Instruct](https://huggingface.co/Qwen/
   - [Step 2: Prepare the Dataset](#step-2-prepare-the-dataset)
   - [Step 3: Fine-Tune the Model](#step-3-fine-tune-the-model)
   - [Step 4: Run Inference](#step-4-run-inference)
+  - [Step 5: Push to Hugging Face Hub](#step-5-push-to-hugging-face-hub)
 - [How It Works](#how-it-works)
 - [Hardware Requirements](#hardware-requirements)
 - [Results](#results)
@@ -48,8 +49,9 @@ llm-fine-tune/
 ├── config.py                  # Centralized configuration (model, paths, hyperparams)
 ├── tools.py                   # Dummy tool/function definitions (weather, calc, etc.)
 ├── prepare_dataset.py         # Transform xLAM-60K → Qwen3 chat template format
-├── train.py                   # Fine-tuning script (LoRA + SFTTrainer)
+├── train.py                   # Fine-tuning script (LoRA + SFTTrainer + W&B logging)
 ├── inference.py               # Interactive inference with tool execution loop
+├── save_to_hf.py              # Push merged model & LoRA adapter to Hugging Face Hub
 └── .gitignore                 # Git ignore rules
 ```
 
@@ -80,11 +82,17 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Login to Hugging Face (for model download & upload)
+### 4. Set up environment variables
 
-```bash
-huggingface-cli login
+Create a `.env` file in the project root with your API keys:
+
 ```
+HF_TOKEN=hf_your_token_here
+WANDB_API_KEY=your_wandb_key_here
+```
+
+- **HF_TOKEN**: Get from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) — needed to download gated models and upload your fine-tuned model
+- **WANDB_API_KEY**: Get from [wandb.ai/settings](https://wandb.ai/settings) — needed for training metrics logging (skip if you don't want W&B tracking)
 
 ---
 
@@ -94,14 +102,25 @@ huggingface-cli login
 
 Open `tools.py` to see the mock tools we've defined. These simulate real API calls:
 
+| Tool | Description |
+|------|-------------|
+| `get_weather(city, unit)` | Current weather (temperature, condition, humidity) |
+| `calculate(expression)` | Evaluate a math expression safely |
+| `search_web(query, num_results)` | Web search returning titles, snippets, and URLs |
+| `get_stock_price(symbol)` | Stock price, change, and percentage change |
+| `get_current_datetime(timezone)` | Current date, time, and day of the week |
+| `translate_text(text, target_language, source_language)` | Text translation (mock) |
+
 ```python
 # Example: A weather tool
 def get_weather(city: str, unit: str = "celsius") -> dict:
-    """Get current weather for a city (mock data)."""
-    return {"city": city, "temperature": 22, "unit": unit, "condition": "sunny"}
+    """Get current weather information for a given city."""
+    return {"city": city, "temperature": 22, "unit": unit, "condition": "sunny", "humidity": 65}
 ```
 
 The model will learn WHEN to call these tools and with WHAT arguments. The key insight: the model doesn't execute the tools — it outputs a structured JSON tool call, and our code executes it.
+
+`TOOL_REGISTRY` maps function names to their callables, and `TOOL_DEFINITIONS` holds the JSON schema the model sees in the system prompt during both training and inference.
 
 ### Step 2: Prepare the Dataset
 
@@ -152,8 +171,21 @@ This uses:
 - **LoRA** (Low-Rank Adaptation) — only trains ~1-2% of parameters
 - **4-bit quantization** (QLoRA) — fits in ~8GB VRAM
 - **SFTTrainer** from the `trl` library for supervised fine-tuning
+- **Weights & Biases** for experiment tracking (requires `WANDB_API_KEY` in `.env`)
 
-Training will save checkpoints to `./output/` and the final merged model to `./output/final_model/`.
+Training will save checkpoints to `./output/` and the final merged model to `./output/final_model/`. The LoRA adapter is separately saved to `./output/lora_adapter/`.
+
+**W&B Logging**
+
+Each run automatically logs to the `qwen3-4b-function-calling` project on your W&B workspace. The following hyperparameters and live training metrics are tracked:
+
+| Logged Value | Source |
+|---|---|
+| `model_name`, `lora_r`, `lora_alpha`, `lora_dropout` | `config.py` |
+| `epochs`, `learning_rate`, `lr_scheduler`, `warmup_ratio` | `config.py` |
+| `per_device_train_batch_size`, `gradient_accumulation_steps` | `config.py` |
+| `weight_decay`, `optim` | `config.py` |
+| Train/eval loss, learning rate curve | HF Trainer (via `report_to="wandb"`) |
 
 ### Step 4: Run Inference
 
@@ -166,6 +198,21 @@ This starts an interactive chat where you can test the fine-tuned model. When th
 2. Executes the matching Python function from `tools.py`
 3. Feeds the result back as a `<tool_response>`
 4. Gets the model's final answer
+
+### Step 5: Push to Hugging Face Hub
+
+```bash
+python save_to_hf.py
+```
+
+This script reads `HF_TOKEN` from your `.env` file, authenticates with the Hub, and uploads both artifacts:
+
+| Artifact | Local Path | Hub Repo |
+|---|---|---|
+| Merged model | `./output/final_model` | `<username>/qwen3-4b-function-calling` |
+| LoRA adapter | `./output/lora_adapter` | `<username>/qwen3-4b-function-calling-lora` |
+
+Repos are created automatically if they don't exist (public by default). The script skips any artifact whose local directory is missing and prints a warning.
 
 ---
 
@@ -220,16 +267,13 @@ After fine-tuning, the model should:
 
 ### Push to Hugging Face Hub
 
-```python
-# In train.py, uncomment the push_to_hub lines, or run:
-from huggingface_hub import HfApi
-api = HfApi()
-api.upload_folder(
-    folder_path="./output/final_model",
-    repo_id="<your-username>/qwen3-4b-function-calling",
-    repo_type="model",
-)
+Make sure `HF_TOKEN` is set in your `.env` file, then run:
+
+```bash
+python save_to_hf.py
 ```
+
+This uploads the merged model **and** the standalone LoRA adapter in one command. See [Step 5](#step-5-push-to-hugging-face-hub) for the full details.
 
 ## License
 
