@@ -44,9 +44,9 @@ class TrainingConfig:
     """Training hyperparameters."""
     output_dir: str = "./output"
     num_train_epochs: int = 3
-    per_device_train_batch_size: int = 2
-    per_device_eval_batch_size: int = 2
-    gradient_accumulation_steps: int = 4  # Effective batch size = 2 * 4 = 8
+    per_device_train_batch_size: int = 1   # 1 for 6 GB GPU; increase if you have more VRAM
+    per_device_eval_batch_size: int = 1
+    gradient_accumulation_steps: int = 8  # Effective batch size = 1 * 8 = 8 (unchanged)
     learning_rate: float = 2e-4
     warmup_ratio: float = 0.05
     weight_decay: float = 0.01
@@ -56,10 +56,12 @@ class TrainingConfig:
     save_total_limit: int = 3
     fp16: bool = False  # Set True if GPU doesn't support bf16
     bf16: bool = True   # Recommended for Ampere+ GPUs
+    tf32: bool = True   # Free speedup on Ampere+ via TF32 matmul
     gradient_checkpointing: bool = True
     optim: str = "paged_adamw_8bit"
     lr_scheduler_type: str = "cosine"
-    report_to: str = "none"  # Change to "wandb" if you want W&B logging
+    report_to: str = "wandb"
+    dataloader_num_workers: int = 0   # 0 on Windows — multiprocessing workers hold extra memory
 
 
 @dataclass
