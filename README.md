@@ -278,5 +278,5 @@ This uploads the merged model **and** the standalone LoRA adapter in one command
 ## License
 
 - **Code**: MIT License
-- **Base Model**: [Apache 2.0](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)
-- **Dataset**: [CC-BY-4.0](https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k)
+- **Base Model**: [Qwen3-4B-Instruct - Apache 2.0](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)
+- **Dataset**: [Salesforce/xlam-function-calling-60k - CC-BY-4.0](https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k)
