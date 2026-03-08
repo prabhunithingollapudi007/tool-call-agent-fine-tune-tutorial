@@ -2,6 +2,10 @@
 
 A hobby project that fine-tunes [Qwen3-4B-Instruct](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) on the [xLAM Function Calling 60K](https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k) dataset to create a small LLM capable of deciding when to call external tools (Python functions) instead of just chatting, then using the tool result to generate a better final answer.
 
+**Published models:**
+- 🤗 Merged model: [prabhu-nithin/qwen3-4b-xlam-function-calling-60k](https://huggingface.co/prabhu-nithin/qwen3-4b-xlam-function-calling-60k)
+- 🤗 LoRA adapter: [prabhu-nithin/qwen3-4b-xlam-function-calling-60k-lora](https://huggingface.co/prabhu-nithin/qwen3-4b-xlam-function-calling-60k-lora)
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -209,8 +213,8 @@ This script reads `HF_TOKEN` from your `.env` file, authenticates with the Hub, 
 
 | Artifact | Local Path | Hub Repo |
 |---|---|---|
-| Merged model | `./output/final_model` | `<username>/qwen3-4b-function-calling` |
-| LoRA adapter | `./output/lora_adapter` | `<username>/qwen3-4b-function-calling-lora` |
+| Merged model | `./output/final_model` | [`prabhu-nithin/qwen3-4b-xlam-function-calling-60k`](https://huggingface.co/prabhu-nithin/qwen3-4b-xlam-function-calling-60k) |
+| LoRA adapter | `./output/lora_adapter` | [`prabhu-nithin/qwen3-4b-xlam-function-calling-60k-lora`](https://huggingface.co/prabhu-nithin/qwen3-4b-xlam-function-calling-60k-lora) |
 
 Repos are created automatically if they don't exist (public by default). The script skips any artifact whose local directory is missing and prints a warning.
 
